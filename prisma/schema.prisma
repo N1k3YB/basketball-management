@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Модель ролей пользователей
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+
+  @@map("roles")
+}
+
+// Модель пользователей системы
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile   Profile?
+  player    Player?
+  coach     Coach?
+
+  @@map("users")
+}
+
+// Модель профилей пользователей
+model Profile {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName  String
+  lastName   String
+  phone      String?
+  address    String?
+  avatar     Bytes?
+  avatarType String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+// Модель игроков
+model Player {
+  id           String         @id @default(uuid())
+  userId       String         @unique
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  birthDate    DateTime
+  height       Float? // в сантиметрах
+  weight       Float? // в килограммах
+  position     PlayerPosition
+  jerseyNumber Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  teamPlayers  TeamPlayer[]
+  eventPlayers EventPlayer[]
+  playerStats  PlayerStat[]
+
+  @@map("players")
+}
+
+// Перечисление позиций игроков
+enum PlayerPosition {
+  POINT_GUARD // Разыгрывающий защитник
+  SHOOTING_GUARD // Атакующий защитник
+  SMALL_FORWARD // Легкий форвард
+  POWER_FORWARD // Тяжелый форвард
+  CENTER // Центровой
+}
+
+// Модель тренеров
+model Coach {
+  id             String       @id @default(uuid())
+  userId         String       @unique
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization String?
+  experience     Int? // опыт в годах
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  teams          Team[]
+  eventCoaches   EventCoach[]
+
+  @@map("coaches")
+}
+
+// Модель команд
+model Team {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  coachId     String?
+  coach       Coach?       @relation(fields: [coachId], references: [id])
+  // Статистика команды
+  gamesPlayed Int          @default(0)
+  wins        Int          @default(0)
+  losses      Int          @default(0)
+  draws       Int          @default(0)
+  pointsFor   Int          @default(0)
+  pointsAgainst Int        @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  teamPlayers TeamPlayer[]
+  eventTeams  EventTeam[]
+  homeMatches Match[]      @relation("HomeTeam")
+  awayMatches Match[]      @relation("AwayTeam")
+
+  @@map("teams")
+}
+
+// Связь игрок-команда (многие ко многим)
+model TeamPlayer {
+  id        String    @id @default(uuid())
+  teamId    String
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  joinDate  DateTime  @default(now())
+  leaveDate DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([teamId, playerId])
+  @@map("team_players")
+}
+
+// Модель событий (тренировки, матчи)
+model Event {
+  id           String        @id @default(uuid())
+  title        String
+  description  String?
+  eventType    EventType
+  startTime    DateTime
+  endTime      DateTime
+  location     String?
+  status       MatchStatus   @default(SCHEDULED)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  eventTeams   EventTeam[]
+  eventPlayers EventPlayer[]
+  eventCoaches EventCoach[]
+  match        Match?
+
+  @@map("events")
+}
+
+// Перечисление типов событий
+enum EventType {
+  TRAINING // Тренировка
+  MATCH // Матч
+  MEETING // Собрание
+  OTHER // Другое
+}
+
+// Связь события с командой
+model EventTeam {
+  id        String   @id @default(uuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, teamId])
+  @@map("event_teams")
+}
+
+// Связь события с игроком
+model EventPlayer {
+  id         String           @id @default(uuid())
+  eventId    String
+  event      Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  playerId   String
+  player     Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  attendance AttendanceStatus @default(PLANNED)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([eventId, playerId])
+  @@map("event_players")
+}
+
+// Перечисление статусов посещения
+enum AttendanceStatus {
+  PLANNED // Запланировано
+  ATTENDED // Присутствовал
+  ABSENT // Отсутствовал
+  EXCUSED // Отсутствовал по уважительной причине
+}
+
+// Связь события с тренером
+model EventCoach {
+  id        String   @id @default(uuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  coachId   String
+  coach     Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, coachId])
+  @@map("event_coaches")
+}
+
+// Модель матчей (расширяет событие)
+model Match {
+  id          String       @id @default(uuid())
+  eventId     String       @unique
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  homeTeamId  String
+  homeTeam    Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId  String
+  awayTeam    Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeScore   Int?
+  awayScore   Int?
+  status      MatchStatus  @default(SCHEDULED)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  playerStats PlayerStat[]
+
+  @@map("matches")
+}
+
+// Перечисление статусов матча
+enum MatchStatus {
+  SCHEDULED // Запланирован
+  IN_PROGRESS // В процессе
+  COMPLETED // Завершен
+  CANCELLED // Отменен
+  POSTPONED // Отложен
+}
+
+// Модель статистики игроков в матчах
+model PlayerStat {
+  id                     String   @id @default(uuid())
+  matchId                String
+  match                  Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerId               String
+  player                 Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  points                 Int      @default(0)
+  rebounds               Int      @default(0)
+  assists                Int      @default(0)
+  steals                 Int      @default(0)
+  blocks                 Int      @default(0)
+  turnovers              Int      @default(0)
+  minutesPlayed          Int?
+  fieldGoalsMade         Int      @default(0)
+  fieldGoalsAttempted    Int      @default(0)
+  threePointersMade      Int      @default(0)
+  threePointersAttempted Int      @default(0)
+  freeThrowsMade         Int      @default(0)
+  freeThrowsAttempted    Int      @default(0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@unique([matchId, playerId])
+  @@map("player_stats")
+}
