@@ -11,7 +11,6 @@ const nextConfig = {
   // Экспериментальные функции
   experimental: {
     // Отключаем статическую оптимизацию
-    appDir: true,
     // Устанавливаем тип сборки на серверный рендеринг
     serverActions: {
       bodySizeLimit: '2mb'
