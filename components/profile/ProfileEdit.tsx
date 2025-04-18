@@ -131,8 +131,9 @@ export default function ProfileEdit({ userData, onSave, onCancel }: ProfileEditP
     if (!file) return;
     
     // Проверка типа файла
-    if (!file.type.startsWith('image/')) {
-      toast.error('Файл должен быть изображением');
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Допустимы только форматы JPEG, JPG и WEBP');
       return;
     }
     
@@ -263,7 +264,7 @@ export default function ProfileEdit({ userData, onSave, onCancel }: ProfileEditP
                       <input
                         id="avatar-upload"
                         type="file"
-                        accept="image/*"
+                        accept=".jpeg,.jpg,.webp"
                         className="hidden"
                         onChange={handleAvatarUpload}
                         disabled={avatarLoading}
