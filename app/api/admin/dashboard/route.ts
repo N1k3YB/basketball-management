@@ -3,6 +3,10 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+// Добавляем директивы для динамического рендеринга
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Интерфейс для активности
 interface Activity {
   id: string;

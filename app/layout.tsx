@@ -7,6 +7,10 @@ import SessionProvider from '@/components/providers/SessionProvider';
 import { cn } from '@/lib/utils';
 import { Toaster } from 'react-hot-toast';
 
+// Указываем, что корневой лейаут должен быть динамическим
+// Это решит проблему с серверными компонентами
+export const dynamic = "force-dynamic";
+
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata: Metadata = {
