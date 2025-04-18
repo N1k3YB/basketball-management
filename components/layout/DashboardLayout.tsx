@@ -150,10 +150,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         console.log('Конвертация аватара в DashboardLayout:', {
           avatarExist: !!session.user.avatar
         });
-        
+        // Если аватар уже строка data url или base64, используем напрямую
+        if (typeof session.user.avatar === 'string' && (session.user.avatar.startsWith('data:') || session.user.avatar.startsWith('http') || session.user.avatar.startsWith('blob:'))) {
+          setAvatarUrl(session.user.avatar);
+          return;
+        }
         // Если у объекта avatar нет поля type, использование image/jpeg как типа по умолчанию
         const avatarType = (session.user as any).avatarType || 'image/jpeg';
-        
         const url = binaryToImageUrl(session.user.avatar, avatarType);
         if (url) {
           setAvatarUrl(url);
