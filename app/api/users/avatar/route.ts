@@ -28,10 +28,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Проверка типа файла (должен быть изображением)
-    if (!avatarFile.type.startsWith('image/')) {
+    // Проверка типа файла (только поддерживаемые форматы)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/webp'];
+    if (!allowedTypes.includes(avatarFile.type)) {
       return NextResponse.json(
-        { error: 'Файл должен быть изображением' },
+        { error: 'Допустимы только форматы JPEG, JPG и WEBP' },
         { status: 400 }
       );
     }
