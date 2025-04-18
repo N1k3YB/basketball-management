@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { authenticateUser, getUserById } from '@/lib/db/user';
-import { decodeAvatar } from '@/lib/utils/avatar';
+import { decodeAvatar, binaryToImageUrl } from '@/lib/utils/avatar';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -53,8 +53,12 @@ export const authOptions: NextAuthOptions = {
             session.user.firstName = userData.profile.firstName;
             session.user.lastName = userData.profile.lastName;
             session.user.fullName = `${userData.profile.firstName} ${userData.profile.lastName}`;
-            // Использование поля avatar вместо avatars для совместимости с базой данных
-            session.user.avatar = userData.profile.avatar || null;
+            // Преобразуем бинарные данные аватара в строку base64, если они существуют
+            if (userData.profile.avatar && userData.profile.avatarType) {
+              session.user.avatar = binaryToImageUrl(userData.profile.avatar, userData.profile.avatarType);
+            } else {
+              session.user.avatar = null;
+            }
             session.user.avatarType = userData.profile.avatarType || null;
           }
           
