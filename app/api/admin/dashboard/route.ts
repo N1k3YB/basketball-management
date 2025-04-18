@@ -21,6 +21,26 @@ interface Activity {
   };
 }
 
+// Интерфейс для типа, возвращаемого из Prisma
+interface PrismaActivity {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  createdAt: Date;
+  user: {
+    id: string;
+    email: string;
+    role: {
+      name: string;
+    };
+    profile?: {
+      firstName: string | null;
+      lastName: string | null;
+    } | null;
+  };
+}
+
 // GET /api/admin/dashboard - получение данных для панели администратора
 export async function GET(request: Request) {
   try {
@@ -71,7 +91,7 @@ export async function GET(request: Request) {
     });
 
     // Получаем последние действия (активности)
-    let recentActivities = [];
+    let recentActivities: PrismaActivity[] = [];
     try {
       recentActivities = await prisma.activity.findMany({
         include: {
@@ -79,7 +99,11 @@ export async function GET(request: Request) {
             select: {
               id: true,
               email: true,
-              role: true,
+              role: {
+                select: {
+                  name: true
+                }
+              },
               profile: {
                 select: {
                   firstName: true,
@@ -100,7 +124,7 @@ export async function GET(request: Request) {
     }
 
     // Форматируем данные о последних действиях
-    const formattedActivities = recentActivities.map((activity: Activity) => ({
+    const formattedActivities = recentActivities.map((activity: PrismaActivity) => ({
       id: activity.id,
       action: activity.action,
       entityType: activity.entityType,
@@ -110,7 +134,7 @@ export async function GET(request: Request) {
         id: activity.user.id,
         name: `${activity.user.profile?.firstName || ''} ${activity.user.profile?.lastName || ''}`,
         email: activity.user.email,
-        role: activity.user.role
+        role: activity.user.role.name
       }
     }));
 
