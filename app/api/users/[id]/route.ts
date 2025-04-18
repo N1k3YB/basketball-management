@@ -163,7 +163,7 @@ export async function PUT(
       data.lastName || 
       data.phone !== undefined || 
       data.address !== undefined ||
-      data.avatars !== undefined
+      data.avatar !== undefined
     ) {
       updateData.profile = {
         update: {
@@ -171,7 +171,7 @@ export async function PUT(
           lastName: data.lastName || existingUser.profile?.lastName,
           phone: data.phone !== undefined ? data.phone : existingUser.profile?.phone,
           address: data.address !== undefined ? data.address : existingUser.profile?.address,
-          avatars: data.avatars !== undefined ? data.avatars : existingUser.profile?.avatars
+          avatar: data.avatar !== undefined ? data.avatar : existingUser.profile?.avatar
         }
       };
     }
@@ -318,7 +318,7 @@ export async function PATCH(
       data.lastName || 
       data.phone !== undefined || 
       data.address !== undefined ||
-      data.avatars !== undefined
+      data.avatar !== undefined
     ) {
       updateData.profile = {
         update: {
@@ -326,7 +326,7 @@ export async function PATCH(
           lastName: data.lastName || existingUser.profile?.lastName,
           phone: data.phone !== undefined ? data.phone : existingUser.profile?.phone,
           address: data.address !== undefined ? data.address : existingUser.profile?.address,
-          avatars: data.avatars !== undefined ? data.avatars : existingUser.profile?.avatars
+          avatar: data.avatar !== undefined ? data.avatar : existingUser.profile?.avatar
         }
       };
     }

@@ -259,7 +259,7 @@ openssl rand -base64 32
 ### 3. Инициализация базы данных
 
 ```powershell
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 npx prisma db seed
 ```
 
