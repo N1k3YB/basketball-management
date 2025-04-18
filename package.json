@@ -11,7 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "db:init": "prisma migrate deploy && prisma db seed"
+    "db:init": "prisma migrate deploy && prisma db seed",
+    "generate:player-stats": "ts-node scripts/generate-player-stats.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",
