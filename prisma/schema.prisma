@@ -285,3 +285,13 @@ model Activity {
 
   @@map("activities")
 }
+
+// Модель настроек системы
+model Setting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

@@ -136,7 +136,8 @@ export async function updateProfile(
     lastName?: string;
     phone?: string;
     address?: string;
-    avatar?: string;
+    avatar?: Buffer | null;
+    avatarType?: string;
   }
 ) {
   return prisma.profile.update({

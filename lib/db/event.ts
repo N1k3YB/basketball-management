@@ -121,7 +121,7 @@ export async function createEvent(
 ) {
   const { teamIds, playerIds, coachIds, ...eventData } = data;
 
-  return prisma.$transaction(async (tx: PrismaClient) => {
+  return prisma.$transaction(async (tx) => {
     // Создание события
     const event = await tx.event.create({
       data: eventData,
@@ -190,9 +190,9 @@ export async function createMatch(
 ) {
   const { homeTeamId, awayTeamName, status, ...eventData } = data;
 
-  return prisma.$transaction(async (prisma) => {
+  return prisma.$transaction(async (tx) => {
     // Создание события
-    const event = await prisma.event.create({
+    const event = await tx.event.create({
       data: {
         ...eventData,
         eventType: 'MATCH',
@@ -200,27 +200,17 @@ export async function createMatch(
     });
 
     // Создание матча
-    const match = await prisma.match.create({
+    const match = await tx.match.create({
       data: {
         eventId: event.id,
         status: status || 'SCHEDULED',
-        // Использование объекта для связи с домашней командой
-        homeTeam: {
-          connect: {
-            id: homeTeamId
-          }
-        },
-        // Для гостевой команды используется та же домашняя команда
-        awayTeam: {
-          connect: {
-            id: homeTeamId
-          }
-        }
+        homeTeamId: homeTeamId,
+        awayTeamId: homeTeamId // Используем тот же ID для гостевой команды, как в исходном коде
       },
     });
 
     // Добавление домашней команды к событию
-    await prisma.eventTeam.create({
+    await tx.eventTeam.create({
       data: {
         eventId: event.id,
         teamId: homeTeamId
@@ -228,7 +218,7 @@ export async function createMatch(
     });
 
     // Получение всех игроков из домашней команды
-    const homePlayers = await prisma.teamPlayer.findMany({
+    const homePlayers = await tx.teamPlayer.findMany({
       where: {
         teamId: homeTeamId,
         isActive: true,
@@ -240,7 +230,7 @@ export async function createMatch(
 
     // Добавление игроков домашней команды к событию
     if (homePlayers.length > 0) {
-      await prisma.eventPlayer.createMany({
+      await tx.eventPlayer.createMany({
         data: homePlayers.map((p) => ({
           eventId: event.id,
           playerId: p.playerId,
@@ -249,14 +239,14 @@ export async function createMatch(
     }
 
     // Получение тренера домашней команды
-    const homeTeam = await prisma.team.findUnique({
+    const homeTeam = await tx.team.findUnique({
       where: { id: homeTeamId },
       select: { coachId: true },
     });
 
     // Добавление тренера к событию
     if (homeTeam?.coachId) {
-      await prisma.eventCoach.create({
+      await tx.eventCoach.create({
         data: {
           eventId: event.id,
           coachId: homeTeam.coachId,
